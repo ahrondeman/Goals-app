@@ -38,19 +38,15 @@
 html, body {
   height: 100%;
   min-height: 100%;
-  overflow: auto;
-  position: fixed;
-  width: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
   /* ── Layout shell ── */
   .shell {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
     max-width: 480px;
     margin: 0 auto;
   }
@@ -157,13 +153,10 @@ html, body {
 
   /* ── Scroll area ── */
   /* FIX 1: overflow-x:hidden prevents horizontal scrolling on the today tab */
-  .scroll {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px 20px;
-  }
+.scroll {
+  flex: 1;
+  overflow: visible;
+}
 
   /* ── Progress bar ── */
   .progress-bar-wrap {
