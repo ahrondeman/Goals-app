@@ -147,7 +147,14 @@
   .bnav-btn.active i { color: var(--green); }
 
   /* ── Scroll area ── */
-  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 20px; }
+  /* FIX 1: overflow-x:hidden prevents horizontal scrolling on the today tab */
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px 20px;
+  }
 
   /* ── Progress bar ── */
   .progress-bar-wrap {
@@ -187,6 +194,8 @@
   }
   .vital {
     flex: 1;
+    /* FIX 1: min-width:0 prevents flex children from overflowing */
+    min-width: 0;
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -207,6 +216,8 @@
   .vital-num { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; min-width: 44px; }
   .vital input[type=range] {
     flex: 1;
+    /* FIX 1: min-width:0 lets the range input shrink properly */
+    min-width: 0;
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
@@ -300,11 +311,10 @@
     cursor: pointer;
     font-size: 16px;
     padding: 2px;
-    opacity: 0;
-    transition: opacity 0.15s;
+    /* FIX 2: always visible on touch devices (no hover state on mobile) */
+    opacity: 1;
     display: flex;
   }
-  .habit-row:hover .hdel { opacity: 1; }
 
   /* ── Add row ── */
   .add-row {
@@ -323,9 +333,11 @@
     font-size: 13px;
     padding: 0 10px;
     outline: none;
+    /* FIX 2: font-size 16px prevents iOS auto-zoom on focus (which blocks keyboard) */
+    font-size: 16px;
   }
   .add-row input { flex: 1; min-width: 80px; }
-  .add-row select { background: var(--bg2); }
+  .add-row select { background: var(--bg2); font-size: 13px; }
   .add-row input[type=number] { width: 56px; flex: none; }
   .add-row button {
     background: var(--green);
@@ -335,6 +347,7 @@
     cursor: pointer;
     padding: 0 14px;
     transition: opacity 0.15s;
+    font-size: 14px;
   }
   .add-row button:active { opacity: 0.8; }
 
@@ -364,77 +377,71 @@
     outline: none;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
+    /* FIX 2: 16px prevents iOS auto-zoom which can suppress the keyboard */
+    font-size: 16px;
     line-height: 1.6;
     resize: none;
     min-height: 90px;
   }
   .journal-wrap textarea::placeholder { color: var(--faint); }
 
-  /* ── Todo ── */
-  .todo-wrap {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-top: 14px;
-  }
-  .todo-wrap label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
+  /* ── Todo tab ── */
+  /* FIX 3: todo styles moved here, now a full tab like streaks/week */
+  .todo-header {
+    font-size: 13px;
     color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
   }
   .todo-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    padding: 13px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
     cursor: pointer;
   }
-  .todo-item:last-child { border-bottom: none; }
+  .todo-item:active { background: var(--bg3); }
   .tchk {
-    width: 18px; height: 18px;
+    width: 20px; height: 20px;
     border-radius: 4px;
     border: 1.5px solid var(--faint);
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .todo-item.done-todo .tchk { background: var(--green); border-color: var(--green); }
-  .tchk i { font-size: 11px; color: #0f0f11; opacity: 0; }
+  .tchk i { font-size: 12px; color: #0f0f11; opacity: 0; }
   .todo-item.done-todo .tchk i { opacity: 1; }
-  .ttext { flex: 1; font-size: 13px; }
+  .ttext { flex: 1; font-size: 14px; }
   .todo-item.done-todo .ttext { text-decoration: line-through; color: var(--muted); }
-  .tdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 15px; display: flex; }
-  .todo-add-row { display: flex; gap: 6px; margin-top: 10px; }
+  /* FIX 2: always visible delete on mobile */
+  .tdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; display: flex; opacity: 1; }
+  .todo-add-row { display: flex; gap: 6px; margin-top: 12px; }
   .todo-add-row input {
     flex: 1;
-    height: 36px;
+    height: 44px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    background: var(--bg3);
+    background: var(--bg2);
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    padding: 0 10px;
+    /* FIX 2: 16px prevents iOS keyboard suppression */
+    font-size: 16px;
+    padding: 0 12px;
     outline: none;
   }
   .todo-add-row button {
-    height: 36px;
+    height: 44px;
     border-radius: var(--radius-sm);
     border: none;
     background: var(--green);
     color: #0f0f11;
     font-family: 'DM Sans', sans-serif;
     font-weight: 600;
-    font-size: 13px;
-    padding: 0 12px;
+    font-size: 14px;
+    padding: 0 16px;
     cursor: pointer;
   }
 
@@ -586,7 +593,7 @@
     </div>
   </div>
 
-  <!-- Day navigator -->
+  <!-- Day navigator (today tab only) -->
   <div class="day-nav">
     <button class="day-nav-btn" onclick="changeDay(-1)" aria-label="Previous day"><i class="ti ti-chevron-left"></i></button>
     <span class="day-label" id="day-label"></span>
@@ -641,23 +648,23 @@
         <button onclick="addHabit()">Add</button>
       </div>
 
-      <!-- To-do -->
-      <div class="todo-wrap">
-        <label><i class="ti ti-list-check"></i> To-do</label>
-        <div id="todo-list"></div>
-        <div class="todo-add-row">
-          <input type="text" id="new-todo" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTodo()">
-          <button onclick="addTodo()">Add</button>
-        </div>
-      </div>
-
-      <!-- Journal -->
+      <!-- Journal (stays on today tab) -->
       <div class="journal-wrap">
         <label><i class="ti ti-pencil"></i> Journal</label>
         <textarea id="journal-text" placeholder="How was today?…" oninput="saveJournal()"></textarea>
       </div>
 
     </div><!-- /today -->
+
+    <!-- FIX 3: TODO is now its own tab -->
+    <div class="tab" id="tab-todo">
+      <div class="todo-header">Tasks are saved per day — use the arrows above to browse past days.</div>
+      <div id="todo-list"></div>
+      <div class="todo-add-row">
+        <input type="text" id="new-todo" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTodo()">
+        <button onclick="addTodo()">Add</button>
+      </div>
+    </div>
 
     <!-- STREAKS TAB -->
     <div class="tab" id="tab-streaks">
@@ -690,18 +697,21 @@
 
   </div><!-- /scroll -->
 
-  <!-- Bottom nav -->
+  <!-- Bottom nav — FIX 3: added Todo button -->
   <nav class="bottom-nav">
-    <button class="bnav-btn active" onclick="switchTab('today',this)" id="bnav-today">
+    <button class="bnav-btn active" onclick="switchTab('today',this)">
       <i class="ti ti-checkbox"></i>Today
     </button>
-    <button class="bnav-btn" onclick="switchTab('streaks',this)" id="bnav-streaks">
+    <button class="bnav-btn" onclick="switchTab('todo',this)">
+      <i class="ti ti-list-check"></i>To-do
+    </button>
+    <button class="bnav-btn" onclick="switchTab('streaks',this)">
       <i class="ti ti-flame"></i>Streaks
     </button>
-    <button class="bnav-btn" onclick="switchTab('week',this)" id="bnav-week">
+    <button class="bnav-btn" onclick="switchTab('week',this)">
       <i class="ti ti-chart-bar"></i>Week
     </button>
-    <button class="bnav-btn" onclick="switchTab('cats',this)" id="bnav-cats">
+    <button class="bnav-btn" onclick="switchTab('cats',this)">
       <i class="ti ti-tag"></i>Categories
     </button>
   </nav>
@@ -758,16 +768,18 @@ function save(){
   try{localStorage.setItem('gt_todos',JSON.stringify(todos));}catch(e){}
 }
 
+// FIX 3: todo tab also shows/hides day nav so you can browse tasks by day
 function switchTab(tab,btn){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  // Day nav only visible on today tab
-  document.querySelector('.day-nav').style.display = tab==='today' ? 'flex' : 'none';
+  const showDayNav = tab==='today' || tab==='todo';
+  document.querySelector('.day-nav').style.display = showDayNav ? 'flex' : 'none';
   if(tab==='week')renderWeek();
   if(tab==='cats')renderCats();
   if(tab==='streaks')renderStreaks();
+  if(tab==='todo')renderTodos();
 }
 
 function renderAll(){
@@ -798,21 +810,18 @@ function renderToday(){
   const day=getDay();
   const isToday=offset===0;
 
-  // day nav
   const dl=document.getElementById('day-label');
   dl.textContent=fmtDay(offset);
   dl.className='day-label'+(isToday?' today-label':'');
   const nb=document.getElementById('next-day-btn');
   nb.disabled=isToday; nb.style.opacity=isToday?'0.3':'1';
 
-  // vitals
   document.getElementById('sleep-sl').value=day.sleep;
   document.getElementById('screen-sl').value=day.screen;
   document.getElementById('sleep-val').textContent=parseFloat(day.sleep)+'h';
   document.getElementById('screen-val').textContent=parseFloat(day.screen)+'h';
   document.getElementById('journal-text').value=day.journal||'';
 
-  // score
   const {pts,maxPts,pct}=calcScore();
   document.getElementById('pbar').style.width=pct+'%';
   document.getElementById('score-pts').textContent=pts+' / '+maxPts+' pts';
@@ -828,7 +837,6 @@ function renderToday(){
   const dot=document.getElementById('score-dot');
   dot.style.background=pct===100?'#22c97a':pct>=50?'#f0a040':'#e05555';
 
-  // habits by category
   const container=document.getElementById('cats-container');
   container.innerHTML='';
   const usedCats=[...new Set(habits.map(h=>h.cat))];
@@ -858,14 +866,12 @@ function renderToday(){
       list.appendChild(div);
     });
   });
-
-  renderTodos();
 }
 
 function renderTodos(){
   const list=document.getElementById('todo-list');if(!list)return;
   const items=getTodos();list.innerHTML='';
-  if(!items.length){list.innerHTML='<div style="font-size:13px;color:var(--muted);padding:4px 0">No tasks — add some!</div>';return;}
+  if(!items.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);padding:4px 0">No tasks — add some!</div>';return;}
   items.forEach((t,i)=>{
     const div=document.createElement('div');
     div.className='todo-item'+(t.done?' done-todo':'');
@@ -904,7 +910,7 @@ function updateVital(key,val){
   getDay()[key]=parseFloat(val);save();
 }
 function saveJournal(){getDay().journal=document.getElementById('journal-text').value;save();}
-function changeDay(d){offset+=d;if(offset>0)offset=0;renderToday();}
+function changeDay(d){offset+=d;if(offset>0)offset=0;renderToday();renderTodos();}
 
 function renderStreaks(){
   const container=document.getElementById('streak-container');
