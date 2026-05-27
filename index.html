@@ -1,330 +1,401 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+
+<!-- iOS PWA SAFE VIEWPORT -->
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover"
+/>
+
 <title>Goals</title>
+
 <link rel="manifest" href="manifest.json">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-touch-fullscreen" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f11">
+
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+
 <style>
-  :root {
-    --bg: #0f0f11;
-    --bg2: #18181c;
-    --bg3: #22222a;
-    --border: #2e2e38;
-    --text: #f0f0f3;
-    --muted: #7a7a8c;
-    --faint: #3a3a48;
-    --green: #22c97a;
-    --green-dim: #1a3d2e;
-    --amber: #f0a040;
-    --amber-dim: #3a2810;
-    --red: #e05555;
-    --blue: #5b9cf6;
-    --radius: 14px;
-    --radius-sm: 9px;
-    --nav-h: 60px;
-  }
+:root{
+  --bg:#0f0f11;
+  --bg2:#18181c;
+  --bg3:#22222a;
+  --border:#2e2e38;
+  --text:#f0f0f3;
+  --muted:#7a7a8c;
+  --faint:#3a3a48;
+  --green:#22c97a;
+  --red:#e05555;
+  --amber:#f0a040;
+  --blue:#5b9cf6;
+  --radius:14px;
+  --radius-sm:9px;
+  --nav-h:64px;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  /*
-    iOS PWA KEYBOARD FIX:
-    The core problem: overflow:hidden on html/body + a flex scroll container
-    prevents the iOS standalone WebKit from raising the keyboard.
-    Solution: let html/body scroll naturally. The bottom nav is fixed.
-    Each "tab" is a full page that shows/hides via display:none.
-    No overflow:hidden anywhere on ancestor elements of inputs.
-  */
-  html {
-    background: var(--bg);
-    /* allow natural scroll — critical for iOS PWA keyboard */
-    overflow-y: scroll;
-  }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    /* pad bottom so content isn't hidden under fixed nav */
-    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
-    min-height: 100vh;
-  }
+html{
+  height:100%;
+  background:var(--bg);
+  -webkit-text-size-adjust:100%;
+}
 
-  .shell {
-    max-width: 480px;
-    margin: 0 auto;
-  }
+body{
+  min-height:100dvh;
+  background:var(--bg);
+  color:var(--text);
 
-  /* ── Header ── */
-  .header {
-    padding: 52px 20px 10px; /* extra top for iPhone status bar in standalone */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
-  .header-date { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 
-  .score-pill {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 24px; padding: 7px 14px;
-    font-size: 13px; font-weight: 500;
-  }
-  .score-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--green); flex-shrink: 0; transition: background 0.3s;
-  }
+  overflow-x:hidden;
+  overflow-y:auto;
 
-  /* ── Day nav ── */
-  .day-nav {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 20px 6px;
-  }
-  .day-nav-btn {
-    width: 34px; height: 34px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--bg2);
-    color: var(--text); cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; flex-shrink: 0;
-  }
-  .day-nav-btn:active { background: var(--bg3); }
-  .day-nav-btn:disabled { opacity: 0.3; }
-  .day-label {
-    flex: 1; text-align: center; font-size: 13px; font-weight: 500;
-    color: var(--muted); font-family: 'DM Mono', monospace;
-  }
-  .day-label.today-label { color: var(--text); }
+  -webkit-overflow-scrolling:touch;
 
-  /* ── Tab content ── */
-  .tab { display: none; padding: 0 16px; }
-  .tab.active { display: block; }
+  padding-bottom:
+    calc(
+      var(--nav-h)
+      + env(safe-area-inset-bottom)
+    );
+}
 
-  /* ── Bottom nav — fixed, always visible ── */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    display: flex;
-    border-top: 1px solid var(--border);
-    background: var(--bg);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 100;
-  }
-  .bnav-btn {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 3px;
-    padding: 10px 4px 8px;
-    border: none; background: transparent; color: var(--muted);
-    cursor: pointer; font-size: 10px; font-weight: 500;
-    font-family: 'DM Sans', sans-serif; transition: color 0.15s;
-  }
-  .bnav-btn i { font-size: 20px; }
-  .bnav-btn.active { color: var(--text); }
-  .bnav-btn.active i { color: var(--green); }
+.shell{
+  max-width:480px;
+  margin:0 auto;
+}
 
-  /* ── Progress bar ── */
-  .progress-bar-wrap {
-    background: var(--bg2); border-radius: var(--radius);
-    padding: 14px 16px; margin-bottom: 14px; border: 1px solid var(--border);
-  }
-  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-  .progress-big { font-size: 28px; font-weight: 600; letter-spacing: -1px; }
-  .progress-sub { font-size: 12px; color: var(--muted); }
-  .pbar-track { height: 6px; background: var(--faint); border-radius: 3px; overflow: hidden; }
-  .pbar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.4s cubic-bezier(.4,0,.2,1); }
-  .progress-msg { font-size: 12px; color: var(--muted); margin-top: 8px; }
+/* HEADER */
 
-  /* ── Vitals ── */
-  .vitals-row { display: flex; gap: 10px; margin-bottom: 14px; }
-  .vital {
-    flex: 1; min-width: 0;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 14px;
-  }
-  .vital-label {
-    font-size: 11px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: 0.5px; margin-bottom: 6px;
-    display: flex; align-items: center; gap: 4px;
-  }
-  .vital-label i { font-size: 13px; }
-  .vital-val-row { display: flex; align-items: center; gap: 8px; }
-  .vital-num { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; min-width: 44px; }
-  .vital input[type=range] {
-    flex: 1; min-width: 0;
-    -webkit-appearance: none; appearance: none;
-    height: 4px; border-radius: 2px; background: var(--faint); outline: none;
-  }
-  .vital input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px; height: 20px; border-radius: 50%; background: var(--text); cursor: pointer;
-  }
+.header{
+  padding:
+    calc(40px + env(safe-area-inset-top))
+    20px
+    10px;
 
-  /* ── Section headers ── */
-  .sec-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px; }
-  .sec-title {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.8px; color: var(--muted);
-    display: flex; align-items: center; gap: 6px;
-  }
-  .sec-title span { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .sec-badge { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
 
-  /* ── Habit rows ── */
-  .habit-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 13px 14px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 6px;
-    cursor: pointer; user-select: none;
-    transition: background 0.12s, border-color 0.12s;
-  }
-  .habit-row:active { background: var(--bg3); }
-  .habit-row.done { border-color: var(--green-dim); background: #16201a; }
-  .chk {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 1.5px solid var(--faint); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .habit-row.done .chk { background: var(--green); border-color: var(--green); }
-  .chk i { font-size: 13px; color: #0f0f11; opacity: 0; transition: opacity 0.15s; }
-  .habit-row.done .chk i { opacity: 1; }
-  .hname { flex: 1; font-size: 14px; }
-  .habit-row.done .hname { color: var(--muted); text-decoration: line-through; }
-  .htags { display: flex; align-items: center; gap: 5px; }
-  .hpts { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--amber); background: var(--amber-dim); border-radius: 4px; padding: 2px 5px; }
-  .hstreak { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 2px; }
-  .hstreak i { font-size: 12px; color: var(--amber); }
-  .hdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; padding: 4px; display: flex; }
+.header h1{
+  font-size:24px;
+  font-weight:700;
+}
 
-  /* ── Inputs — 16px font everywhere to prevent iOS zoom ── */
-  input[type=text], input[type=number], textarea, select {
-    font-size: 16px !important;
-    font-family: 'DM Sans', sans-serif;
-  }
+.header-date{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:2px;
+}
 
-  /* ── Add habit row ── */
-  .add-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .add-row input, .add-row select {
-    height: 44px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--bg2);
-    color: var(--text); padding: 0 10px; outline: none;
-  }
-  .add-row input[type=text] { flex: 1; min-width: 100px; }
-  .add-row select { background: var(--bg2); color: var(--text); }
-  .add-row input[type=number] { width: 60px; flex: none; }
-  .add-row button {
-    height: 44px; border-radius: var(--radius-sm);
-    border: none; background: var(--green); color: #0f0f11;
-    font-family: 'DM Sans', sans-serif; font-weight: 600;
-    font-size: 14px; padding: 0 16px; cursor: pointer;
-  }
-  .add-row button:active { opacity: 0.8; }
+.score-pill{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:999px;
 
-  /* ── Journal ── */
-  .journal-wrap {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px; margin-top: 14px;
-  }
-  .journal-wrap label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.8px; color: var(--muted);
-    display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
-  }
-  .journal-wrap textarea {
-    width: 100%; background: transparent; border: none; outline: none;
-    color: var(--text); line-height: 1.6; resize: none; min-height: 100px;
-  }
-  .journal-wrap textarea::placeholder { color: var(--faint); }
+  display:flex;
+  align-items:center;
+  gap:8px;
 
-  /* ── Todo tab ── */
-  .todo-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 13px 14px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer;
-  }
-  .todo-item:active { background: var(--bg3); }
-  .tchk {
-    width: 20px; height: 20px; border-radius: 4px;
-    border: 1.5px solid var(--faint); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .todo-item.done-todo .tchk { background: var(--green); border-color: var(--green); }
-  .tchk i { font-size: 12px; color: #0f0f11; opacity: 0; }
-  .todo-item.done-todo .tchk i { opacity: 1; }
-  .ttext { flex: 1; font-size: 14px; }
-  .todo-item.done-todo .ttext { text-decoration: line-through; color: var(--muted); }
-  .tdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; display: flex; padding: 4px; }
-  .todo-add-row { display: flex; gap: 6px; margin-top: 12px; }
-  .todo-add-row input {
-    flex: 1; height: 44px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--bg2);
-    color: var(--text); padding: 0 12px; outline: none;
-  }
-  .todo-add-row button {
-    height: 44px; border-radius: var(--radius-sm); border: none;
-    background: var(--green); color: #0f0f11;
-    font-family: 'DM Sans', sans-serif; font-weight: 600;
-    font-size: 14px; padding: 0 16px; cursor: pointer;
-  }
+  padding:8px 14px;
+}
 
-  /* ── Streaks ── */
-  .streak-card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;
-    display: flex; align-items: flex-start; gap: 14px;
-  }
-  .streak-num { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--amber); min-width: 36px; line-height: 1; padding-top: 2px; }
-  .streak-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
-  .streak-cat { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-  .sdots { display: flex; gap: 3px; flex-wrap: wrap; }
-  .sdot { width: 13px; height: 13px; border-radius: 3px; background: var(--faint); }
-  .sdot.hit { background: var(--green); }
-  .sdot.today-dot { outline: 2px solid var(--blue); outline-offset: 1px; }
+.score-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+}
 
-  /* ── Week ── */
-  .week-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .week-nav-btn {
-    width: 34px; height: 34px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--bg2);
-    color: var(--text); cursor: pointer;
-    display: flex; align-items: center; justify-content: center; font-size: 16px;
-  }
-  .week-nav-btn:disabled { opacity: 0.3; }
-  .week-nav-label { flex: 1; text-align: center; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
-  .week-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-  .wstat { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
-  .wstat-num { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; }
-  .wstat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .wday { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 6px; }
-  .wday.today-day { border-color: var(--blue); }
-  .wday-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .wday-name { font-size: 13px; font-weight: 500; }
-  .wday-pts { font-size: 12px; font-family: 'DM Mono', monospace; }
-  .wbar-bg { height: 5px; background: var(--faint); border-radius: 3px; }
-  .wbar-fg { height: 100%; border-radius: 3px; transition: width 0.3s; }
-  .wday-meta { font-size: 11px; color: var(--muted); margin-top: 7px; display: flex; gap: 12px; }
-  .wday-note { font-size: 11px; color: var(--muted); margin-top: 6px; font-style: italic; padding-top: 6px; border-top: 1px solid var(--border); }
+/* DAY NAV */
 
-  /* ── Categories ── */
-  .cat-row { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 6px; }
-  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .cat-inp { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; }
-  .cat-color-inp { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; padding: 2px; background: transparent; }
-  .cat-del { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; }
+.day-nav{
+  display:flex;
+  align-items:center;
+  gap:10px;
 
-  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
-  input::placeholder { color: var(--faint); }
-  select option { background: var(--bg2); color: var(--text); }
+  padding:10px 20px 16px;
+}
+
+.day-nav-btn{
+  width:38px;
+  height:38px;
+
+  border:none;
+  border-radius:12px;
+
+  background:var(--bg2);
+  color:var(--text);
+
+  font-size:18px;
+}
+
+.day-label{
+  flex:1;
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+}
+
+/* TABS */
+
+.tab{
+  display:block;
+
+  padding:0 16px;
+
+  visibility:hidden;
+  opacity:0;
+
+  height:0;
+  overflow:hidden;
+
+  pointer-events:none;
+}
+
+.tab.active{
+  visibility:visible;
+  opacity:1;
+
+  height:auto;
+  overflow:visible;
+
+  pointer-events:auto;
+}
+
+/* CARDS */
+
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+}
+
+.progress-big{
+  font-size:30px;
+  font-weight:700;
+}
+
+.progress-sub{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:4px;
+}
+
+.pbar-track{
+  height:8px;
+  background:var(--faint);
+  border-radius:999px;
+  margin-top:14px;
+  overflow:hidden;
+}
+
+.pbar-fill{
+  height:100%;
+  width:0%;
+  background:var(--green);
+  border-radius:999px;
+  transition:width .25s;
+}
+
+/* INPUTS */
+
+input,
+textarea,
+select,
+button{
+  font-family:inherit;
+  font-size:16px !important;
+}
+
+input[type=text],
+input[type=number],
+textarea,
+select{
+  width:100%;
+
+  background:var(--bg2);
+  color:var(--text);
+
+  border:1px solid var(--border);
+  border-radius:12px;
+
+  outline:none;
+}
+
+input{
+  height:48px;
+  padding:0 14px;
+}
+
+textarea{
+  min-height:120px;
+  resize:none;
+  padding:14px;
+  line-height:1.5;
+}
+
+input::placeholder,
+textarea::placeholder{
+  color:var(--faint);
+}
+
+/* HABITS */
+
+.habit-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  background:var(--bg2);
+
+  border:1px solid var(--border);
+  border-radius:12px;
+
+  padding:14px;
+  margin-bottom:8px;
+
+  user-select:none;
+}
+
+.habit-row.done{
+  border-color:#1f4c38;
+  background:#152118;
+}
+
+.chk{
+  width:22px;
+  height:22px;
+
+  border-radius:50%;
+  border:2px solid var(--faint);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  flex-shrink:0;
+}
+
+.habit-row.done .chk{
+  background:var(--green);
+  border-color:var(--green);
+}
+
+.chk i{
+  color:#000;
+  opacity:0;
+  font-size:13px;
+}
+
+.habit-row.done .chk i{
+  opacity:1;
+}
+
+.hname{
+  flex:1;
+}
+
+.habit-row.done .hname{
+  text-decoration:line-through;
+  color:var(--muted);
+}
+
+/* ADD ROW */
+
+.add-row{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.add-row button{
+  border:none;
+  background:var(--green);
+  color:#000;
+
+  border-radius:12px;
+
+  padding:0 18px;
+
+  font-weight:700;
+}
+
+/* NAV */
+
+.bottom-nav{
+  position:sticky;
+  bottom:0;
+
+  display:flex;
+
+  border-top:1px solid var(--border);
+
+  background:rgba(15,15,17,.96);
+  backdrop-filter:blur(20px);
+
+  padding-bottom:env(safe-area-inset-bottom);
+
+  z-index:50;
+}
+
+.bnav-btn{
+  flex:1;
+
+  border:none;
+  background:none;
+  color:var(--muted);
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+
+  padding:10px 0 8px;
+}
+
+.bnav-btn i{
+  font-size:20px;
+}
+
+.bnav-btn.active{
+  color:var(--text);
+}
+
+.bnav-btn.active i{
+  color:var(--green);
+}
+
+.sec-title{
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:10px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
 </style>
 </head>
 <body>
+
 <div class="shell">
 
   <div class="header">
@@ -332,430 +403,296 @@
       <h1>Goals</h1>
       <div class="header-date" id="today-sub"></div>
     </div>
+
     <div class="score-pill">
-      <div class="score-dot" id="score-dot"></div>
+      <div class="score-dot"></div>
       <span id="header-score">0%</span>
     </div>
   </div>
 
-  <div class="day-nav" id="day-nav-wrap">
-    <button class="day-nav-btn" onclick="changeDay(-1)"><i class="ti ti-chevron-left"></i></button>
-    <span class="day-label" id="day-label"></span>
-    <button class="day-nav-btn" id="next-day-btn" onclick="changeDay(1)"><i class="ti ti-chevron-right"></i></button>
+  <div class="day-nav">
+    <button class="day-nav-btn" onclick="changeDay(-1)">
+      <i class="ti ti-chevron-left"></i>
+    </button>
+
+    <div class="day-label" id="day-label"></div>
+
+    <button class="day-nav-btn" onclick="changeDay(1)">
+      <i class="ti ti-chevron-right"></i>
+    </button>
   </div>
 
-  <!-- TODAY -->
+  <!-- TODAY TAB -->
+
   <div class="tab active" id="tab-today">
-    <div class="progress-bar-wrap">
-      <div class="progress-top">
-        <span class="progress-big" id="score-pts">0 pts</span>
-        <span class="progress-sub" id="score-frac">0 / 0 habits</span>
-      </div>
-      <div class="pbar-track"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
-      <div class="progress-msg" id="score-msg"></div>
-    </div>
 
-    <div class="vitals-row">
-      <div class="vital">
-        <div class="vital-label"><i class="ti ti-moon"></i> Sleep</div>
-        <div class="vital-val-row">
-          <span class="vital-num" id="sleep-val">7h</span>
-          <input type="range" min="0" max="12" step="0.5" value="7" id="sleep-sl" oninput="updateVital('sleep',this.value)">
-        </div>
-      </div>
-      <div class="vital">
-        <div class="vital-label"><i class="ti ti-device-mobile"></i> Screen</div>
-        <div class="vital-val-row">
-          <span class="vital-num" id="screen-val">2h</span>
-          <input type="range" min="0" max="16" step="0.5" value="2" id="screen-sl" oninput="updateVital('screen',this.value)">
-        </div>
+    <div class="card">
+      <div class="progress-big" id="score-pts">0 pts</div>
+      <div class="progress-sub" id="score-frac">0 / 0 habits</div>
+
+      <div class="pbar-track">
+        <div class="pbar-fill" id="pbar"></div>
       </div>
     </div>
 
-    <div id="cats-container"></div>
+    <div class="sec-title">Habits</div>
 
-    <div class="sec-head" style="margin-top:16px">
-      <div class="sec-title">Add habit</div>
-    </div>
-    <div class="add-row">
-      <input type="text" id="new-habit" placeholder="Habit name" maxlength="50" onkeydown="if(event.key==='Enter')addHabit()">
-      <select id="new-cat-sel"></select>
-      <input type="number" id="new-pts" placeholder="pts" min="1" max="99" value="1">
-      <button onclick="addHabit()">Add</button>
+    <div id="habit-list"></div>
+
+    <div class="card">
+
+      <div class="sec-title">Add Habit</div>
+
+      <div class="add-row">
+        <input
+          type="text"
+          id="new-habit"
+          placeholder="Habit name"
+        >
+
+        <button onclick="addHabit()">
+          Add
+        </button>
+      </div>
+
     </div>
 
-    <div class="journal-wrap">
-      <label><i class="ti ti-pencil"></i> Journal</label>
-      <textarea id="journal-text" placeholder="How was today?…" oninput="saveJournal()"></textarea>
+    <div class="card">
+
+      <div class="sec-title">Journal</div>
+
+      <textarea
+        id="journal"
+        placeholder="How was today?"
+      ></textarea>
+
     </div>
+
   </div>
 
-  <!-- TODO -->
-  <div class="tab" id="tab-todo">
-    <div class="hint" style="margin-bottom:14px">Tasks per day — browse with the arrows above.</div>
-    <div id="todo-list"></div>
-    <div class="todo-add-row">
-      <input type="text" id="new-todo" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTodo()">
-      <button onclick="addTodo()">Add</button>
-    </div>
-  </div>
+</div>
 
-  <!-- STREAKS -->
-  <div class="tab" id="tab-streaks">
-    <div class="hint" style="margin-bottom:14px">Streak = consecutive days checked. Last 14 days shown.</div>
-    <div id="streak-container"></div>
-  </div>
-
-  <!-- WEEK -->
-  <div class="tab" id="tab-week">
-    <div class="week-nav">
-      <button class="week-nav-btn" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
-      <span class="week-nav-label" id="week-label"></span>
-      <button class="week-nav-btn" id="next-week-btn" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
-    </div>
-    <div class="week-stats" id="week-summary"></div>
-    <div id="week-grid"></div>
-  </div>
-
-  <!-- CATEGORIES -->
-  <div class="tab" id="tab-cats">
-    <div class="sec-head"><div class="sec-title">Categories</div></div>
-    <div id="cat-list"></div>
-    <div class="add-row" style="margin-top:8px">
-      <input type="text" id="new-cat-name" placeholder="New category" maxlength="30" onkeydown="if(event.key==='Enter')addCat()" style="flex:1">
-      <input type="color" id="new-cat-color" value="#7F77DD" class="cat-color-inp" style="width:42px;height:44px;flex:none">
-      <button onclick="addCat()">Add</button>
-    </div>
-    <div class="hint">Deleting a category moves its habits to the first category.</div>
-  </div>
-
-</div><!-- /shell -->
-
-<!-- Fixed bottom nav -->
 <nav class="bottom-nav">
-  <button class="bnav-btn active" onclick="switchTab('today',this)"><i class="ti ti-checkbox"></i>Today</button>
-  <button class="bnav-btn" onclick="switchTab('todo',this)"><i class="ti ti-list-check"></i>To-do</button>
-  <button class="bnav-btn" onclick="switchTab('streaks',this)"><i class="ti ti-flame"></i>Streaks</button>
-  <button class="bnav-btn" onclick="switchTab('week',this)"><i class="ti ti-chart-bar"></i>Week</button>
-  <button class="bnav-btn" onclick="switchTab('cats',this)"><i class="ti ti-tag"></i>Categories</button>
+
+  <button
+    class="bnav-btn active"
+    onclick="switchTab('today',this)"
+  >
+    <i class="ti ti-checkbox"></i>
+    Today
+  </button>
+
 </nav>
 
 <script>
-let habits=[], dayData={}, cats=[], todos={}, offset=0, weekOffset=0;
-
-const DCATS=[
-  {id:'c1',name:'Health',color:'#22c97a'},
-  {id:'c2',name:'Education',color:'#5b9cf6'},
-  {id:'c3',name:'Productivity',color:'#7F77DD'},
-  {id:'c4',name:'Finance',color:'#8ecb45'},
-  {id:'c5',name:'Addiction',color:'#e05555'},
-  {id:'c6',name:'Habits',color:'#f0a040'},
-];
-const DHAB=[
-  {id:'h1',text:'Exercise 30 min',cat:'c1',pts:3},
-  {id:'h2',text:'Drink 2L water',cat:'c1',pts:1},
-  {id:'h3',text:'Study / read',cat:'c2',pts:2},
-  {id:'h4',text:'No junk food',cat:'c6',pts:2},
-  {id:'h5',text:'Complete top task',cat:'c3',pts:2},
-];
-
-function dateKey(off){const d=new Date();d.setDate(d.getDate()+off);return d.toISOString().slice(0,10);}
-function fmtDay(off){
-  const d=new Date();d.setDate(d.getDate()+off);
-  if(off===0)return'Today';
-  if(off===-1)return'Yesterday';
-  return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-}
-function fmtFull(off){
-  const d=new Date();d.setDate(d.getDate()+off);
-  return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-}
-function getDay(off=offset){const k=dateKey(off);if(!dayData[k])dayData[k]={checked:{},sleep:7,screen:2,journal:''};return dayData[k];}
-function getTodos(off=offset){const k=dateKey(off);if(!todos[k])todos[k]=[];return todos[k];}
-function catById(id){return cats.find(c=>c.id===id)||{name:'Other',color:'#7a7a8c'};}
-
-function load(){
-  try{const r=localStorage.getItem('gt_habits');if(r)habits=JSON.parse(r);}catch(e){}
-  try{const r=localStorage.getItem('gt_daydata');if(r)dayData=JSON.parse(r);}catch(e){}
-  try{const r=localStorage.getItem('gt_cats');if(r)cats=JSON.parse(r);}catch(e){}
-  try{const r=localStorage.getItem('gt_todos');if(r)todos=JSON.parse(r);}catch(e){}
-  if(!cats.length)cats=JSON.parse(JSON.stringify(DCATS));
-  if(!habits.length)habits=JSON.parse(JSON.stringify(DHAB));
-  renderAll();
-}
-function save(){
-  try{localStorage.setItem('gt_habits',JSON.stringify(habits));}catch(e){}
-  try{localStorage.setItem('gt_daydata',JSON.stringify(dayData));}catch(e){}
-  try{localStorage.setItem('gt_cats',JSON.stringify(cats));}catch(e){}
-  try{localStorage.setItem('gt_todos',JSON.stringify(todos));}catch(e){}
-}
-
-function switchTab(tab, btn){
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  // show day nav on today + todo tabs
-  document.getElementById('day-nav-wrap').style.display=(tab==='today'||tab==='todo')?'flex':'none';
-  // scroll to top on tab switch
-  window.scrollTo(0,0);
-  if(tab==='week')renderWeek();
-  if(tab==='cats')renderCats();
-  if(tab==='streaks')renderStreaks();
-  if(tab==='todo')renderTodos();
-}
-
-function renderAll(){
-  document.getElementById('today-sub').textContent=fmtFull(0);
-  renderToday();
-  populateCatSelect();
-}
-
-function calcScore(off=offset){
-  const day=dayData[dateKey(off)]||{checked:{}};
-  let pts=0,maxPts=0;
-  habits.forEach(h=>{maxPts+=(h.pts||1);if(day.checked[h.id])pts+=(h.pts||1);});
-  const pct=maxPts?Math.round(pts/maxPts*100):0;
-  return{pts,maxPts,pct};
-}
-
-function calcStreak(hid){
-  let streak=0,i=0;
-  while(true){
-    const d=dayData[dateKey(-i)];
-    if(!d||!d.checked[hid]){if(i===0)streak=0;break;}
-    streak++;i++;if(i>365)break;
+let habits = [
+  {
+    id:1,
+    text:"Exercise"
+  },
+  {
+    id:2,
+    text:"Read"
   }
-  return streak;
-}
+];
 
-function renderToday(){
-  const day=getDay();
-  const isToday=offset===0;
-  const dl=document.getElementById('day-label');
-  dl.textContent=fmtDay(offset);
-  dl.className='day-label'+(isToday?' today-label':'');
-  const nb=document.getElementById('next-day-btn');
-  nb.disabled=isToday;nb.style.opacity=isToday?'0.3':'1';
+let checked = {};
 
-  document.getElementById('sleep-sl').value=day.sleep;
-  document.getElementById('screen-sl').value=day.screen;
-  document.getElementById('sleep-val').textContent=parseFloat(day.sleep)+'h';
-  document.getElementById('screen-val').textContent=parseFloat(day.screen)+'h';
-  document.getElementById('journal-text').value=day.journal||'';
+function renderHabits(){
 
-  const {pts,maxPts,pct}=calcScore();
-  document.getElementById('pbar').style.width=pct+'%';
-  document.getElementById('score-pts').textContent=pts+' / '+maxPts+' pts';
-  const done=habits.filter(h=>day.checked[h.id]).length;
-  document.getElementById('score-frac').textContent=done+' of '+habits.length+' habits';
-  document.getElementById('score-msg').textContent=
-    habits.length===0?'Add habits to get started.':
-    pct===100?'✦ Perfect day!':pct>=75?'Almost there, push through!':
-    pct>=50?'Halfway there!':done>0?'Keep going!':'Start checking habits!';
-  document.getElementById('header-score').textContent=pct+'%';
-  document.getElementById('score-dot').style.background=pct===100?'#22c97a':pct>=50?'#f0a040':'#e05555';
+  const list =
+    document.getElementById("habit-list");
 
-  const container=document.getElementById('cats-container');
-  container.innerHTML='';
-  const usedCats=[...new Set(habits.map(h=>h.cat))];
-  usedCats.forEach(cid=>{
-    const cat=catById(cid);
-    const ch=habits.filter(h=>h.cat===cid);
-    const catDone=ch.filter(h=>day.checked[h.id]).length;
-    const sec=document.createElement('div');
-    sec.innerHTML=`<div class="sec-head">
-      <div class="sec-title"><span style="background:${cat.color}"></span>${cat.name}</div>
-      <span class="sec-badge">${catDone}/${ch.length}</span>
-    </div><div id="list-${cid}"></div>`;
-    container.appendChild(sec);
-    const list=document.getElementById('list-'+cid);
-    ch.forEach(h=>{
-      const streak=calcStreak(h.id);
-      const div=document.createElement('div');
-      div.className='habit-row'+(day.checked[h.id]?' done':'');
-      div.innerHTML=`<div class="chk"><i class="ti ti-check"></i></div>
-        <span class="hname">${h.text}</span>
-        <div class="htags">
-          ${(h.pts||1)>1?`<span class="hpts">${h.pts}pt</span>`:''}
-          ${streak>0?`<span class="hstreak"><i class="ti ti-flame"></i>${streak}</span>`:''}
-        </div>
-        <button class="hdel" onclick="removeHabit('${h.id}',event)"><i class="ti ti-x"></i></button>`;
-      div.onclick=e=>{if(!e.target.closest('.hdel'))toggleHabit(h.id);};
-      list.appendChild(div);
-    });
-  });
-}
+  list.innerHTML = "";
 
-function renderTodos(){
-  const list=document.getElementById('todo-list');if(!list)return;
-  const items=getTodos();list.innerHTML='';
-  if(!items.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);padding:4px 0">No tasks — add some!</div>';return;}
-  items.forEach((t,i)=>{
-    const div=document.createElement('div');
-    div.className='todo-item'+(t.done?' done-todo':'');
-    div.innerHTML=`<div class="tchk"><i class="ti ti-check"></i></div>
-      <span class="ttext">${t.text}</span>
-      <button class="tdel" onclick="removeTodo(${i},event)"><i class="ti ti-x"></i></button>`;
-    div.onclick=e=>{if(!e.target.closest('.tdel'))toggleTodo(i);};
-    list.appendChild(div);
-  });
-}
+  habits.forEach(h=>{
 
-function addTodo(){const inp=document.getElementById('new-todo');const text=inp.value.trim();if(!text)return;getTodos().push({text,done:false});inp.value='';save();renderTodos();}
-function toggleTodo(i){const t=getTodos();t[i].done=!t[i].done;save();renderTodos();}
-function removeTodo(i,e){e.stopPropagation();const t=getTodos();t.splice(i,1);save();renderTodos();}
+    const row =
+      document.createElement("div");
 
-function populateCatSelect(){
-  const sel=document.getElementById('new-cat-sel');if(!sel)return;
-  const prev=sel.value;sel.innerHTML='';
-  cats.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});
-  if(prev)sel.value=prev;
-}
+    row.className =
+      "habit-row"
+      + (checked[h.id] ? " done" : "");
 
-function toggleHabit(id){const day=getDay();day.checked[id]=!day.checked[id];save();renderToday();}
-function removeHabit(id,e){e.stopPropagation();habits=habits.filter(h=>h.id!==id);save();renderAll();}
-function addHabit(){
-  const inp=document.getElementById('new-habit');
-  const cat=document.getElementById('new-cat-sel').value;
-  const ptsInp=document.getElementById('new-pts');
-  const text=inp.value.trim();if(!text)return;
-  const pts=Math.max(1,Math.min(99,parseInt(ptsInp.value)||1));
-  habits.push({id:'h'+Date.now(),text,cat,pts});
-  inp.value='';ptsInp.value=1;save();renderAll();
-}
-function updateVital(key,val){
-  document.getElementById(key+'-val').textContent=parseFloat(val)+'h';
-  getDay()[key]=parseFloat(val);save();
-}
-function saveJournal(){getDay().journal=document.getElementById('journal-text').value;save();}
-function changeDay(d){offset+=d;if(offset>0)offset=0;renderToday();renderTodos();}
+    row.innerHTML = `
+      <div class="chk">
+        <i class="ti ti-check"></i>
+      </div>
 
-function renderStreaks(){
-  const container=document.getElementById('streak-container');
-  container.innerHTML='';
-  if(!habits.length){container.innerHTML='<div style="color:var(--muted);font-size:14px">No habits yet.</div>';return;}
-  const todayKey=dateKey(0);
-  const sorted=[...habits].sort((a,b)=>calcStreak(b.id)-calcStreak(a.id));
-  sorted.forEach(h=>{
-    const streak=calcStreak(h.id);
-    const cat=catById(h.cat);
-    const dots=Array.from({length:14},(_,i)=>{
-      const k=dateKey(-(13-i));
-      const hit=!!(dayData[k]&&dayData[k].checked[h.id]);
-      const isToday=k===todayKey;
-      return`<div class="sdot${hit?' hit':''}${isToday?' today-dot':''}" title="${k}"></div>`;
-    }).join('');
-    const card=document.createElement('div');card.className='streak-card';
-    card.innerHTML=`<div class="streak-num">${streak||'–'}</div>
-      <div style="flex:1">
-        <div class="streak-name">${h.text}</div>
-        <div class="streak-cat" style="color:${cat.color}">${cat.name} · ${h.pts||1}pt</div>
-        <div class="sdots">${dots}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px">← 14 days ago · today →</div>
-      </div>`;
-    container.appendChild(card);
-  });
-}
+      <div class="hname">
+        ${h.text}
+      </div>
+    `;
 
-function getMondayOffset(weekOff){
-  const now=new Date();const day=now.getDay();
-  const diff=day===0?-6:1-day;
-  const mon=new Date(now);mon.setDate(now.getDate()+diff+weekOff*7);
-  return Math.round((mon-now)/86400000);
-}
-function changeWeek(d){weekOffset+=d;if(weekOffset>0)weekOffset=0;renderWeek();}
+    row.onclick = ()=>{
 
-function renderWeek(){
-  const monday=getMondayOffset(weekOffset);
-  const days=Array.from({length:7},(_,i)=>monday+i);
-  const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const todayKey=dateKey(0);
-  const grid=document.getElementById('week-grid');grid.innerHTML='';
-  let totalPct=0,totalSleep=0,totalScreen=0,totalPts=0,activeDays=0;
-  days.forEach((off,i)=>{
-    const k=dateKey(off);
-    const d=new Date();d.setDate(d.getDate()+off);
-    const dateStr=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    const day=dayData[k]||{checked:{},sleep:7,screen:2,journal:''};
-    const {pts,maxPts,pct}=calcScoreForDay(day);
-    const isToday=k===todayKey;
-    const hasData=Object.keys(day.checked||{}).length>0||day.journal;
-    if(hasData){totalPct+=pct;totalSleep+=parseFloat(day.sleep||7);totalScreen+=parseFloat(day.screen||2);totalPts+=pts;activeDays++;}
-    const barColor=pct>=80?'#22c97a':pct>=50?'#f0a040':'#e05555';
-    const div=document.createElement('div');
-    div.className='wday'+(isToday?' today-day':'');
-    div.innerHTML=`<div class="wday-top">
-      <span class="wday-name">${labels[i]} <span style="font-weight:400;color:var(--muted)">${dateStr}</span>${isToday?' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#1a2a3a;color:var(--blue)">today</span>':''}</span>
-      <span class="wday-pts" style="color:${barColor}">${pts}/${maxPts}pts</span>
-    </div>
-    <div class="wbar-bg"><div class="wbar-fg" style="width:${pct}%;background:${barColor}"></div></div>
-    <div class="wday-meta">
-      <span><i class="ti ti-moon" style="font-size:12px"></i> ${parseFloat(day.sleep||7)}h</span>
-      <span><i class="ti ti-device-mobile" style="font-size:12px"></i> ${parseFloat(day.screen||2)}h</span>
-      <span style="margin-left:auto">${pct}%</span>
-    </div>
-    ${day.journal?`<div class="wday-note">${day.journal.slice(0,100)}${day.journal.length>100?'…':''}</div>`:''}`;
-    grid.appendChild(div);
-  });
-  const startD=new Date();startD.setDate(startD.getDate()+monday);
-  const endD=new Date();endD.setDate(endD.getDate()+monday+6);
-  document.getElementById('week-label').textContent=
-    startD.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' – '+
-    endD.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-  const nb=document.getElementById('next-week-btn');
-  nb.disabled=weekOffset>=0;nb.style.opacity=weekOffset>=0?'0.3':'1';
-  const avgPct=activeDays?Math.round(totalPct/activeDays):0;
-  const avgSleep=activeDays?(totalSleep/activeDays).toFixed(1):'-';
-  const avgScreen=activeDays?(totalScreen/activeDays).toFixed(1):'-';
-  document.getElementById('week-summary').innerHTML=`
-    <div class="wstat"><div class="wstat-num">${avgPct}%</div><div class="wstat-lbl">Avg score</div></div>
-    <div class="wstat"><div class="wstat-num">${totalPts}</div><div class="wstat-lbl">Total pts</div></div>
-    <div class="wstat"><div class="wstat-num">${avgSleep}h</div><div class="wstat-lbl">Avg sleep</div></div>
-    <div class="wstat"><div class="wstat-num">${avgScreen}h</div><div class="wstat-lbl">Avg screen</div></div>`;
-}
+      checked[h.id] = !checked[h.id];
 
-function calcScoreForDay(day){
-  let pts=0,maxPts=0;
-  habits.forEach(h=>{maxPts+=(h.pts||1);if(day.checked&&day.checked[h.id])pts+=(h.pts||1);});
-  const pct=maxPts?Math.round(pts/maxPts*100):0;
-  return{pts,maxPts,pct};
-}
+      renderHabits();
+      updateScore();
+    };
 
-function renderCats(){
-  const list=document.getElementById('cat-list');list.innerHTML='';
-  cats.forEach(cat=>{
-    const row=document.createElement('div');row.className='cat-row';
-    row.innerHTML=`<div class="cat-dot" style="background:${cat.color}"></div>
-      <input class="cat-inp" value="${cat.name}" onchange="renameCat('${cat.id}',this.value)">
-      <input type="color" class="cat-color-inp" value="${cat.color}" style="width:28px;height:28px" onchange="recolorCat('${cat.id}',this.value)">
-      <button class="cat-del" onclick="deleteCat('${cat.id}')"><i class="ti ti-trash"></i></button>`;
     list.appendChild(row);
   });
 }
-function renameCat(id,name){const c=cats.find(c=>c.id===id);if(c)c.name=name;save();populateCatSelect();}
-function recolorCat(id,color){const c=cats.find(c=>c.id===id);if(c)c.color=color;renderCats();save();}
-function deleteCat(id){
-  if(cats.length<=1)return;
-  cats=cats.filter(c=>c.id!==id);
-  habits=habits.map(h=>h.cat===id?{...h,cat:cats[0].id}:h);
-  save();renderCats();populateCatSelect();renderToday();
-}
-function addCat(){
-  const name=document.getElementById('new-cat-name').value.trim();
-  const color=document.getElementById('new-cat-color').value;
-  if(!name)return;
-  cats.push({id:'c'+Date.now(),name,color});
-  document.getElementById('new-cat-name').value='';
-  save();renderCats();populateCatSelect();
+
+function updateScore(){
+
+  let done =
+    Object.values(checked)
+    .filter(Boolean)
+    .length;
+
+  let total = habits.length;
+
+  let pct =
+    total
+      ? Math.round(done / total * 100)
+      : 0;
+
+  document.getElementById("score-pts")
+    .textContent =
+      done + " pts";
+
+  document.getElementById("score-frac")
+    .textContent =
+      done + " / " + total + " habits";
+
+  document.getElementById("header-score")
+    .textContent =
+      pct + "%";
+
+  document.getElementById("pbar")
+    .style.width =
+      pct + "%";
 }
 
-load();
-</script>
-<script>
+function addHabit(){
+
+  const input =
+    document.getElementById("new-habit");
+
+  const text =
+    input.value.trim();
+
+  if(!text) return;
+
+  habits.push({
+    id:Date.now(),
+    text
+  });
+
+  input.value = "";
+
+  renderHabits();
+  updateScore();
+}
+
+function switchTab(tab, btn){
+
+  document
+    .querySelectorAll(".bnav-btn")
+    .forEach(b=>
+      b.classList.remove("active")
+    );
+
+  btn.classList.add("active");
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(t=>
+      t.classList.remove("active")
+    );
+
+  document
+    .getElementById("tab-"+tab)
+    .classList.add("active");
+}
+
+function changeDay(dir){
+  console.log(dir);
+}
+
+/* iOS PWA KEYBOARD FIX */
+
+function forceKeyboardFix(el){
+
+  setTimeout(()=>{
+
+    el.scrollIntoView({
+      block:"center",
+      behavior:"smooth"
+    });
+
+    requestAnimationFrame(()=>{
+      el.focus();
+    });
+
+  },50);
+}
+
+document.addEventListener(
+  "focusin",
+  e=>{
+
+    const el = e.target;
+
+    if(
+      el.tagName === "INPUT"
+      || el.tagName === "TEXTAREA"
+    ){
+      forceKeyboardFix(el);
+    }
+  }
+);
+
+/* VISUAL VIEWPORT FIX */
+
+if(window.visualViewport){
+
+  window.visualViewport
+    .addEventListener(
+      "resize",
+      ()=>{
+
+        document.body.style.minHeight =
+          window.visualViewport.height
+          + "px";
+      }
+    );
+}
+
+/* DATE */
+
+document.getElementById("today-sub")
+.textContent =
+  new Date().toLocaleDateString(
+    "en-GB",
+    {
+      weekday:"long",
+      day:"numeric",
+      month:"long"
+    }
+  );
+
+document.getElementById("day-label")
+.textContent = "Today";
+
+renderHabits();
+updateScore();
+
+/*
+IMPORTANT:
+
+DO NOT REGISTER SERVICE WORKER
+UNTIL KEYBOARD ISSUE IS FIXED
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
+*/
 </script>
+
 </body>
+</html>
 </html>
