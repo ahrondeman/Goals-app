@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Goals</title>
-<!-- PWA SUPPORT -->
 <link rel="manifest" href="manifest.json">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f11">
-
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -31,386 +28,231 @@
     --blue: #5b9cf6;
     --radius: 14px;
     --radius-sm: 9px;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --nav-h: 60px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body {
-  height: 100%;
-  min-height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
-  /* ── Layout shell ── */
-  .shell {
-    display: flex;
-    flex-direction: column;
+  /*
+    iOS PWA KEYBOARD FIX:
+    The core problem: overflow:hidden on html/body + a flex scroll container
+    prevents the iOS standalone WebKit from raising the keyboard.
+    Solution: let html/body scroll naturally. The bottom nav is fixed.
+    Each "tab" is a full page that shows/hides via display:none.
+    No overflow:hidden anywhere on ancestor elements of inputs.
+  */
+  html {
+    background: var(--bg);
+    /* allow natural scroll — critical for iOS PWA keyboard */
+    overflow-y: scroll;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    /* pad bottom so content isn't hidden under fixed nav */
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
     min-height: 100vh;
+  }
+
+  .shell {
     max-width: 480px;
     margin: 0 auto;
   }
 
   /* ── Header ── */
   .header {
-    padding: 18px 20px 10px;
+    padding: 52px 20px 10px; /* extra top for iPhone status bar in standalone */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-shrink: 0;
   }
-  .header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-  }
-  .header-date {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    margin-top: 1px;
-  }
+  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .header-date { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
 
-  /* ── Score pill ── */
   .score-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 24px; padding: 7px 14px;
+    font-size: 13px; font-weight: 500;
   }
   .score-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    flex-shrink: 0;
-    transition: background 0.3s;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); flex-shrink: 0; transition: background 0.3s;
   }
 
   /* ── Day nav ── */
   .day-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 20px 10px;
-    flex-shrink: 0;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px 6px;
   }
   .day-nav-btn {
-    width: 34px; height: 34px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text);
-    cursor: pointer;
+    width: 34px; height: 34px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    transition: background 0.15s;
-    flex-shrink: 0;
+    font-size: 16px; flex-shrink: 0;
   }
   .day-nav-btn:active { background: var(--bg3); }
-  .day-nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .day-nav-btn:disabled { opacity: 0.3; }
   .day-label {
-    flex: 1;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
+    flex: 1; text-align: center; font-size: 13px; font-weight: 500;
+    color: var(--muted); font-family: 'DM Mono', monospace;
   }
   .day-label.today-label { color: var(--text); }
 
-  /* ── Bottom nav ── */
+  /* ── Tab content ── */
+  .tab { display: none; padding: 0 16px; }
+  .tab.active { display: block; }
+
+  /* ── Bottom nav — fixed, always visible ── */
   .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
     display: flex;
     border-top: 1px solid var(--border);
     background: var(--bg);
-    padding-bottom: calc(8px + var(--safe-bottom));
-    flex-shrink: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 100;
   }
   .bnav-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 10px 4px 6px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
-    transition: color 0.15s;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    padding: 10px 4px 8px;
+    border: none; background: transparent; color: var(--muted);
+    cursor: pointer; font-size: 10px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; transition: color 0.15s;
   }
   .bnav-btn i { font-size: 20px; }
   .bnav-btn.active { color: var(--text); }
   .bnav-btn.active i { color: var(--green); }
 
-  /* ── Scroll area ── */
-  /* FIX 1: overflow-x:hidden prevents horizontal scrolling on the today tab */
-.scroll {
-  flex: 1;
-  overflow: visible;
-}
-
   /* ── Progress bar ── */
   .progress-bar-wrap {
-    background: var(--bg2);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    border: 1px solid var(--border);
+    background: var(--bg2); border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 14px; border: 1px solid var(--border);
   }
-  .progress-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 10px;
-  }
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
   .progress-big { font-size: 28px; font-weight: 600; letter-spacing: -1px; }
   .progress-sub { font-size: 12px; color: var(--muted); }
-  .pbar-track {
-    height: 6px;
-    background: var(--faint);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .pbar-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: var(--green);
-    transition: width 0.4s cubic-bezier(.4,0,.2,1);
-  }
+  .pbar-track { height: 6px; background: var(--faint); border-radius: 3px; overflow: hidden; }
+  .pbar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.4s cubic-bezier(.4,0,.2,1); }
   .progress-msg { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
-  /* ── Vitals row ── */
-  .vitals-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
+  /* ── Vitals ── */
+  .vitals-row { display: flex; gap: 10px; margin-bottom: 14px; }
   .vital {
-    flex: 1;
-    /* FIX 1: min-width:0 prevents flex children from overflowing */
-    min-width: 0;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
+    flex: 1; min-width: 0;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
   }
   .vital-label {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 4px;
   }
   .vital-label i { font-size: 13px; }
   .vital-val-row { display: flex; align-items: center; gap: 8px; }
   .vital-num { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; min-width: 44px; }
   .vital input[type=range] {
-    flex: 1;
-    /* FIX 1: min-width:0 lets the range input shrink properly */
-    min-width: 0;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--faint);
-    outline: none;
+    flex: 1; min-width: 0;
+    -webkit-appearance: none; appearance: none;
+    height: 4px; border-radius: 2px; background: var(--faint); outline: none;
   }
   .vital input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: var(--text);
-    cursor: pointer;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--text); cursor: pointer;
   }
 
-  /* ── Section header ── */
-  .sec-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 18px 0 8px;
-  }
+  /* ── Section headers ── */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px; }
   .sec-title {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
   }
   .sec-title span { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .sec-badge {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-  }
+  .sec-badge { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
-  /* ── Habit row ── */
+  /* ── Habit rows ── */
   .habit-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex; align-items: center; gap: 10px;
     padding: 13px 14px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 6px;
-    cursor: pointer;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 6px;
+    cursor: pointer; user-select: none;
     transition: background 0.12s, border-color 0.12s;
-    user-select: none;
   }
   .habit-row:active { background: var(--bg3); }
   .habit-row.done { border-color: var(--green-dim); background: #16201a; }
   .chk {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 1.5px solid var(--faint);
-    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--faint); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.2s, border-color 0.2s;
   }
-  .habit-row.done .chk {
-    background: var(--green);
-    border-color: var(--green);
-  }
+  .habit-row.done .chk { background: var(--green); border-color: var(--green); }
   .chk i { font-size: 13px; color: #0f0f11; opacity: 0; transition: opacity 0.15s; }
   .habit-row.done .chk i { opacity: 1; }
-  .hname { flex: 1; font-size: 14px; font-weight: 400; }
+  .hname { flex: 1; font-size: 14px; }
   .habit-row.done .hname { color: var(--muted); text-decoration: line-through; }
   .htags { display: flex; align-items: center; gap: 5px; }
-  .hpts {
-    font-size: 10px;
-    font-family: 'DM Mono', monospace;
-    color: var(--amber);
-    background: var(--amber-dim);
-    border-radius: 4px;
-    padding: 2px 5px;
-  }
-  .hstreak {
-    font-size: 11px;
-    color: var(--muted);
-    display: flex; align-items: center; gap: 2px;
-  }
+  .hpts { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--amber); background: var(--amber-dim); border-radius: 4px; padding: 2px 5px; }
+  .hstreak { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 2px; }
   .hstreak i { font-size: 12px; color: var(--amber); }
-  .hdel {
-    background: none;
-    border: none;
-    color: var(--faint);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 2px;
-    /* FIX 2: always visible on touch devices (no hover state on mobile) */
-    opacity: 1;
-    display: flex;
+  .hdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; padding: 4px; display: flex; }
+
+  /* ── Inputs — 16px font everywhere to prevent iOS zoom ── */
+  input[type=text], input[type=number], textarea, select {
+    font-size: 16px !important;
+    font-family: 'DM Sans', sans-serif;
   }
 
-  /* ── Add row ── */
-  .add-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    flex-wrap: wrap;
+  /* ── Add habit row ── */
+  .add-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .add-row input, .add-row select {
+    height: 44px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text); padding: 0 10px; outline: none;
   }
-  .add-row input, .add-row select, .add-row button {
-    height: 38px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    padding: 0 10px;
-    outline: none;
-    /* FIX 2: font-size 16px prevents iOS auto-zoom on focus (which blocks keyboard) */
-    font-size: 16px;
-  }
-  .add-row input { flex: 1; min-width: 80px; }
-  .add-row select { background: var(--bg2); font-size: 13px; }
-  .add-row input[type=number] { width: 56px; flex: none; }
+  .add-row input[type=text] { flex: 1; min-width: 100px; }
+  .add-row select { background: var(--bg2); color: var(--text); }
+  .add-row input[type=number] { width: 60px; flex: none; }
   .add-row button {
-    background: var(--green);
-    color: #0f0f11;
-    border-color: var(--green);
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0 14px;
-    transition: opacity 0.15s;
-    font-size: 14px;
+    height: 44px; border-radius: var(--radius-sm);
+    border: none; background: var(--green); color: #0f0f11;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    font-size: 14px; padding: 0 16px; cursor: pointer;
   }
   .add-row button:active { opacity: 0.8; }
 
   /* ── Journal ── */
   .journal-wrap {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-top: 14px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-top: 14px;
   }
   .journal-wrap label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--muted);
+    display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
   }
   .journal-wrap textarea {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    /* FIX 2: 16px prevents iOS auto-zoom which can suppress the keyboard */
-    font-size: 16px;
-    line-height: 1.6;
-    resize: none;
-    min-height: 90px;
+    width: 100%; background: transparent; border: none; outline: none;
+    color: var(--text); line-height: 1.6; resize: none; min-height: 100px;
   }
   .journal-wrap textarea::placeholder { color: var(--faint); }
 
   /* ── Todo tab ── */
-  /* FIX 3: todo styles moved here, now a full tab like streaks/week */
-  .todo-header {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
   .todo-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex; align-items: center; gap: 10px;
     padding: 13px 14px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 6px;
-    cursor: pointer;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer;
   }
   .todo-item:active { background: var(--bg3); }
   .tchk {
-    width: 20px; height: 20px;
-    border-radius: 4px;
-    border: 1.5px solid var(--faint);
-    flex-shrink: 0;
+    width: 20px; height: 20px; border-radius: 4px;
+    border: 1.5px solid var(--faint); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .todo-item.done-todo .tchk { background: var(--green); border-color: var(--green); }
@@ -418,113 +260,49 @@ html, body {
   .todo-item.done-todo .tchk i { opacity: 1; }
   .ttext { flex: 1; font-size: 14px; }
   .todo-item.done-todo .ttext { text-decoration: line-through; color: var(--muted); }
-  /* FIX 2: always visible delete on mobile */
-  .tdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; display: flex; opacity: 1; }
+  .tdel { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; display: flex; padding: 4px; }
   .todo-add-row { display: flex; gap: 6px; margin-top: 12px; }
   .todo-add-row input {
-    flex: 1;
-    height: 44px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    /* FIX 2: 16px prevents iOS keyboard suppression */
-    font-size: 16px;
-    padding: 0 12px;
-    outline: none;
+    flex: 1; height: 44px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text); padding: 0 12px; outline: none;
   }
   .todo-add-row button {
-    height: 44px;
-    border-radius: var(--radius-sm);
-    border: none;
-    background: var(--green);
-    color: #0f0f11;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    padding: 0 16px;
-    cursor: pointer;
+    height: 44px; border-radius: var(--radius-sm); border: none;
+    background: var(--green); color: #0f0f11;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    font-size: 14px; padding: 0 16px; cursor: pointer;
   }
 
-  /* ── Streaks tab ── */
+  /* ── Streaks ── */
   .streak-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;
+    display: flex; align-items: flex-start; gap: 14px;
   }
-  .streak-num {
-    font-size: 26px;
-    font-weight: 700;
-    font-family: 'DM Mono', monospace;
-    color: var(--amber);
-    min-width: 36px;
-    line-height: 1;
-    padding-top: 2px;
-  }
+  .streak-num { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--amber); min-width: 36px; line-height: 1; padding-top: 2px; }
   .streak-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
   .streak-cat { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
   .sdots { display: flex; gap: 3px; flex-wrap: wrap; }
-  .sdot {
-    width: 13px; height: 13px;
-    border-radius: 3px;
-    background: var(--faint);
-    transition: background 0.2s;
-  }
+  .sdot { width: 13px; height: 13px; border-radius: 3px; background: var(--faint); }
   .sdot.hit { background: var(--green); }
   .sdot.today-dot { outline: 2px solid var(--blue); outline-offset: 1px; }
 
-  /* ── Week tab ── */
-  .week-nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
+  /* ── Week ── */
+  .week-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .week-nav-btn {
-    width: 34px; height: 34px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
+    width: 34px; height: 34px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
   }
   .week-nav-btn:disabled { opacity: 0.3; }
-  .week-nav-label {
-    flex: 1;
-    text-align: center;
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-  }
-  .week-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .wstat {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-  }
+  .week-nav-label { flex: 1; text-align: center; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+  .week-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .wstat { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
   .wstat-num { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; }
   .wstat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .wday {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    margin-bottom: 6px;
-  }
+  .wday { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 6px; }
   .wday.today-day { border-color: var(--blue); }
   .wday-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .wday-name { font-size: 13px; font-weight: 500; }
@@ -534,48 +312,14 @@ html, body {
   .wday-meta { font-size: 11px; color: var(--muted); margin-top: 7px; display: flex; gap: 12px; }
   .wday-note { font-size: 11px; color: var(--muted); margin-top: 6px; font-style: italic; padding-top: 6px; border-top: 1px solid var(--border); }
 
-  /* ── Cats tab ── */
-  .cat-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    margin-bottom: 6px;
-  }
+  /* ── Categories ── */
+  .cat-row { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 6px; }
   .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .cat-inp {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-  }
-  .cat-color-inp {
-    width: 28px; height: 28px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 2px;
-    background: transparent;
-  }
-  .cat-del {
-    background: none;
-    border: none;
-    color: var(--faint);
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .cat-inp { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .cat-color-inp { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; padding: 2px; background: transparent; }
+  .cat-del { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 16px; }
 
-  /* ── Util ── */
-  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-  .tab { display: none; }
-  .tab.active { display: block; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
   input::placeholder { color: var(--faint); }
   select option { background: var(--bg2); color: var(--text); }
 </style>
@@ -583,7 +327,6 @@ html, body {
 <body>
 <div class="shell">
 
-  <!-- Header -->
   <div class="header">
     <div>
       <h1>Goals</h1>
@@ -595,130 +338,107 @@ html, body {
     </div>
   </div>
 
-  <!-- Day navigator (today tab only) -->
-  <div class="day-nav">
-    <button class="day-nav-btn" onclick="changeDay(-1)" aria-label="Previous day"><i class="ti ti-chevron-left"></i></button>
+  <div class="day-nav" id="day-nav-wrap">
+    <button class="day-nav-btn" onclick="changeDay(-1)"><i class="ti ti-chevron-left"></i></button>
     <span class="day-label" id="day-label"></span>
-    <button class="day-nav-btn" id="next-day-btn" onclick="changeDay(1)" aria-label="Next day"><i class="ti ti-chevron-right"></i></button>
+    <button class="day-nav-btn" id="next-day-btn" onclick="changeDay(1)"><i class="ti ti-chevron-right"></i></button>
   </div>
 
-  <!-- Scrollable content -->
-  <div class="scroll">
-
-    <!-- TODAY TAB -->
-    <div class="tab active" id="tab-today">
-
-      <!-- Progress -->
-      <div class="progress-bar-wrap">
-        <div class="progress-top">
-          <span class="progress-big" id="score-pts">0 pts</span>
-          <span class="progress-sub" id="score-frac">0 / 0 habits</span>
-        </div>
-        <div class="pbar-track"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
-        <div class="progress-msg" id="score-msg"></div>
+  <!-- TODAY -->
+  <div class="tab active" id="tab-today">
+    <div class="progress-bar-wrap">
+      <div class="progress-top">
+        <span class="progress-big" id="score-pts">0 pts</span>
+        <span class="progress-sub" id="score-frac">0 / 0 habits</span>
       </div>
+      <div class="pbar-track"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+      <div class="progress-msg" id="score-msg"></div>
+    </div>
 
-      <!-- Vitals -->
-      <div class="vitals-row">
-        <div class="vital">
-          <div class="vital-label"><i class="ti ti-moon"></i> Sleep</div>
-          <div class="vital-val-row">
-            <span class="vital-num" id="sleep-val">7h</span>
-            <input type="range" min="0" max="12" step="0.5" value="7" id="sleep-sl" oninput="updateVital('sleep',this.value)">
-          </div>
-        </div>
-        <div class="vital">
-          <div class="vital-label"><i class="ti ti-device-mobile"></i> Screen</div>
-          <div class="vital-val-row">
-            <span class="vital-num" id="screen-val">2h</span>
-            <input type="range" min="0" max="16" step="0.5" value="2" id="screen-sl" oninput="updateVital('screen',this.value)">
-          </div>
+    <div class="vitals-row">
+      <div class="vital">
+        <div class="vital-label"><i class="ti ti-moon"></i> Sleep</div>
+        <div class="vital-val-row">
+          <span class="vital-num" id="sleep-val">7h</span>
+          <input type="range" min="0" max="12" step="0.5" value="7" id="sleep-sl" oninput="updateVital('sleep',this.value)">
         </div>
       </div>
-
-      <!-- Habits by category -->
-      <div id="cats-container"></div>
-
-      <!-- Add habit -->
-      <div class="sec-head" style="margin-top:16px">
-        <div class="sec-title">Add habit</div>
-      </div>
-      <div class="add-row">
-        <input type="text" id="new-habit" placeholder="Habit name" maxlength="50" onkeydown="if(event.key==='Enter')addHabit()">
-        <select id="new-cat-sel"></select>
-        <input type="number" id="new-pts" placeholder="pts" min="1" max="99" value="1" title="Points">
-        <button onclick="addHabit()">Add</button>
-      </div>
-
-      <!-- Journal (stays on today tab) -->
-      <div class="journal-wrap">
-        <label><i class="ti ti-pencil"></i> Journal</label>
-        <textarea id="journal-text" placeholder="How was today?…" oninput="saveJournal()"></textarea>
-      </div>
-
-    </div><!-- /today -->
-
-    <!-- FIX 3: TODO is now its own tab -->
-    <div class="tab" id="tab-todo">
-      <div class="todo-header">Tasks are saved per day — use the arrows above to browse past days.</div>
-      <div id="todo-list"></div>
-      <div class="todo-add-row">
-        <input type="text" id="new-todo" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTodo()">
-        <button onclick="addTodo()">Add</button>
+      <div class="vital">
+        <div class="vital-label"><i class="ti ti-device-mobile"></i> Screen</div>
+        <div class="vital-val-row">
+          <span class="vital-num" id="screen-val">2h</span>
+          <input type="range" min="0" max="16" step="0.5" value="2" id="screen-sl" oninput="updateVital('screen',this.value)">
+        </div>
       </div>
     </div>
 
-    <!-- STREAKS TAB -->
-    <div class="tab" id="tab-streaks">
-      <div class="hint" style="margin-bottom:14px">Streak = consecutive days checked. Last 14 days shown.</div>
-      <div id="streak-container"></div>
+    <div id="cats-container"></div>
+
+    <div class="sec-head" style="margin-top:16px">
+      <div class="sec-title">Add habit</div>
+    </div>
+    <div class="add-row">
+      <input type="text" id="new-habit" placeholder="Habit name" maxlength="50" onkeydown="if(event.key==='Enter')addHabit()">
+      <select id="new-cat-sel"></select>
+      <input type="number" id="new-pts" placeholder="pts" min="1" max="99" value="1">
+      <button onclick="addHabit()">Add</button>
     </div>
 
-    <!-- WEEK TAB -->
-    <div class="tab" id="tab-week">
-      <div class="week-nav">
-        <button class="week-nav-btn" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
-        <span class="week-nav-label" id="week-label"></span>
-        <button class="week-nav-btn" id="next-week-btn" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
-      </div>
-      <div class="week-stats" id="week-summary"></div>
-      <div id="week-grid"></div>
+    <div class="journal-wrap">
+      <label><i class="ti ti-pencil"></i> Journal</label>
+      <textarea id="journal-text" placeholder="How was today?…" oninput="saveJournal()"></textarea>
     </div>
+  </div>
 
-    <!-- CATEGORIES TAB -->
-    <div class="tab" id="tab-cats">
-      <div class="sec-head"><div class="sec-title">Categories</div></div>
-      <div id="cat-list"></div>
-      <div class="add-row" style="margin-top:8px">
-        <input type="text" id="new-cat-name" placeholder="New category" maxlength="30" onkeydown="if(event.key==='Enter')addCat()" style="flex:1">
-        <input type="color" id="new-cat-color" value="#7F77DD" class="cat-color-inp" style="width:42px;height:38px;flex:none">
-        <button onclick="addCat()">Add</button>
-      </div>
-      <div class="hint">Deleting a category moves its habits to the first category.</div>
+  <!-- TODO -->
+  <div class="tab" id="tab-todo">
+    <div class="hint" style="margin-bottom:14px">Tasks per day — browse with the arrows above.</div>
+    <div id="todo-list"></div>
+    <div class="todo-add-row">
+      <input type="text" id="new-todo" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTodo()">
+      <button onclick="addTodo()">Add</button>
     </div>
+  </div>
 
-  </div><!-- /scroll -->
+  <!-- STREAKS -->
+  <div class="tab" id="tab-streaks">
+    <div class="hint" style="margin-bottom:14px">Streak = consecutive days checked. Last 14 days shown.</div>
+    <div id="streak-container"></div>
+  </div>
 
-  <!-- Bottom nav — FIX 3: added Todo button -->
-  <nav class="bottom-nav">
-    <button class="bnav-btn active" onclick="switchTab('today',this)">
-      <i class="ti ti-checkbox"></i>Today
-    </button>
-    <button class="bnav-btn" onclick="switchTab('todo',this)">
-      <i class="ti ti-list-check"></i>To-do
-    </button>
-    <button class="bnav-btn" onclick="switchTab('streaks',this)">
-      <i class="ti ti-flame"></i>Streaks
-    </button>
-    <button class="bnav-btn" onclick="switchTab('week',this)">
-      <i class="ti ti-chart-bar"></i>Week
-    </button>
-    <button class="bnav-btn" onclick="switchTab('cats',this)">
-      <i class="ti ti-tag"></i>Categories
-    </button>
-  </nav>
+  <!-- WEEK -->
+  <div class="tab" id="tab-week">
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
+      <span class="week-nav-label" id="week-label"></span>
+      <button class="week-nav-btn" id="next-week-btn" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <div class="week-stats" id="week-summary"></div>
+    <div id="week-grid"></div>
+  </div>
 
-</div>
+  <!-- CATEGORIES -->
+  <div class="tab" id="tab-cats">
+    <div class="sec-head"><div class="sec-title">Categories</div></div>
+    <div id="cat-list"></div>
+    <div class="add-row" style="margin-top:8px">
+      <input type="text" id="new-cat-name" placeholder="New category" maxlength="30" onkeydown="if(event.key==='Enter')addCat()" style="flex:1">
+      <input type="color" id="new-cat-color" value="#7F77DD" class="cat-color-inp" style="width:42px;height:44px;flex:none">
+      <button onclick="addCat()">Add</button>
+    </div>
+    <div class="hint">Deleting a category moves its habits to the first category.</div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- Fixed bottom nav -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" onclick="switchTab('today',this)"><i class="ti ti-checkbox"></i>Today</button>
+  <button class="bnav-btn" onclick="switchTab('todo',this)"><i class="ti ti-list-check"></i>To-do</button>
+  <button class="bnav-btn" onclick="switchTab('streaks',this)"><i class="ti ti-flame"></i>Streaks</button>
+  <button class="bnav-btn" onclick="switchTab('week',this)"><i class="ti ti-chart-bar"></i>Week</button>
+  <button class="bnav-btn" onclick="switchTab('cats',this)"><i class="ti ti-tag"></i>Categories</button>
+</nav>
 
 <script>
 let habits=[], dayData={}, cats=[], todos={}, offset=0, weekOffset=0;
@@ -770,14 +490,15 @@ function save(){
   try{localStorage.setItem('gt_todos',JSON.stringify(todos));}catch(e){}
 }
 
-// FIX 3: todo tab also shows/hides day nav so you can browse tasks by day
-function switchTab(tab,btn){
+function switchTab(tab, btn){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  const showDayNav = tab==='today' || tab==='todo';
-  document.querySelector('.day-nav').style.display = showDayNav ? 'flex' : 'none';
+  // show day nav on today + todo tabs
+  document.getElementById('day-nav-wrap').style.display=(tab==='today'||tab==='todo')?'flex':'none';
+  // scroll to top on tab switch
+  window.scrollTo(0,0);
   if(tab==='week')renderWeek();
   if(tab==='cats')renderCats();
   if(tab==='streaks')renderStreaks();
@@ -802,7 +523,7 @@ function calcStreak(hid){
   let streak=0,i=0;
   while(true){
     const d=dayData[dateKey(-i)];
-    if(!d||!d.checked[hid]){if(i===0){streak=0;}break;}
+    if(!d||!d.checked[hid]){if(i===0)streak=0;break;}
     streak++;i++;if(i>365)break;
   }
   return streak;
@@ -811,12 +532,11 @@ function calcStreak(hid){
 function renderToday(){
   const day=getDay();
   const isToday=offset===0;
-
   const dl=document.getElementById('day-label');
   dl.textContent=fmtDay(offset);
   dl.className='day-label'+(isToday?' today-label':'');
   const nb=document.getElementById('next-day-btn');
-  nb.disabled=isToday; nb.style.opacity=isToday?'0.3':'1';
+  nb.disabled=isToday;nb.style.opacity=isToday?'0.3':'1';
 
   document.getElementById('sleep-sl').value=day.sleep;
   document.getElementById('screen-sl').value=day.screen;
@@ -831,13 +551,10 @@ function renderToday(){
   document.getElementById('score-frac').textContent=done+' of '+habits.length+' habits';
   document.getElementById('score-msg').textContent=
     habits.length===0?'Add habits to get started.':
-    pct===100?'✦ Perfect day!':
-    pct>=75?'Almost there, push through!':
-    pct>=50?'Halfway there!':
-    done>0?'Keep going!':'Start checking habits!';
+    pct===100?'✦ Perfect day!':pct>=75?'Almost there, push through!':
+    pct>=50?'Halfway there!':done>0?'Keep going!':'Start checking habits!';
   document.getElementById('header-score').textContent=pct+'%';
-  const dot=document.getElementById('score-dot');
-  dot.style.background=pct===100?'#22c97a':pct>=50?'#f0a040':'#e05555';
+  document.getElementById('score-dot').style.background=pct===100?'#22c97a':pct>=50?'#f0a040':'#e05555';
 
   const container=document.getElementById('cats-container');
   container.innerHTML='';
@@ -956,7 +673,6 @@ function renderWeek(){
   const todayKey=dateKey(0);
   const grid=document.getElementById('week-grid');grid.innerHTML='';
   let totalPct=0,totalSleep=0,totalScreen=0,totalPts=0,activeDays=0;
-
   days.forEach((off,i)=>{
     const k=dateKey(off);
     const d=new Date();d.setDate(d.getDate()+off);
@@ -982,7 +698,6 @@ function renderWeek(){
     ${day.journal?`<div class="wday-note">${day.journal.slice(0,100)}${day.journal.length>100?'…':''}</div>`:''}`;
     grid.appendChild(div);
   });
-
   const startD=new Date();startD.setDate(startD.getDate()+monday);
   const endD=new Date();endD.setDate(endD.getDate()+monday+6);
   document.getElementById('week-label').textContent=
@@ -990,7 +705,6 @@ function renderWeek(){
     endD.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   const nb=document.getElementById('next-week-btn');
   nb.disabled=weekOffset>=0;nb.style.opacity=weekOffset>=0?'0.3':'1';
-
   const avgPct=activeDays?Math.round(totalPct/activeDays):0;
   const avgSleep=activeDays?(totalSleep/activeDays).toFixed(1):'-';
   const avgScreen=activeDays?(totalScreen/activeDays).toFixed(1):'-';
